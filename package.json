@@ -1,0 +1,53 @@
+{
+  "name": "climb-bot",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "git@github.com:jlaramie/climb-bot.git",
+  "author": "Jordan Laramie <jordanlaramie@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development serverless offline start --reloadHandler",
+    "build": "cross-env NODE_ENV=production serverless deploy",
+    "watch": "tsc --watch",
+    "lint": "run-s lint:*",
+    "lint:prettier": "prettier --config ./.prettierrc --write .",
+    "lint:eslint": "eslint .",
+    "lint:tslint": "tsc --noEmit --skipLibCheck --project tsconfig.json",
+    "run-script": "node -r ts-node/register ./src/bin/run-script"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.21.0",
+    "discord.js": "^14.7.1",
+    "graphql": "^16.6.0",
+    "graphql-request": "^5.2.0",
+    "lodash": "^4.17.21",
+    "tweetnacl": "^1.0.3",
+    "typesense": "^1.5.3"
+  },
+  "devDependencies": {
+    "@openbeta/sandbag": "^0.0.33",
+    "@sapphire/eslint-config": "^4.3.8",
+    "@sapphire/prettier-config": "^1.4.5",
+    "@sapphire/ts-config": "^3.3.4",
+    "@turf/helpers": "^6.5.0",
+    "@types/aws-lambda": "^8.10.111",
+    "@types/command-line-args": "^5.2.0",
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^16.18.0",
+    "@typescript-eslint/eslint-plugin": "^5.12.0",
+    "@typescript-eslint/parser": "^5.12.0",
+    "command-line-args": "^5.2.1",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.9.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.2",
+    "serverless-offline": "^12.0.4",
+    "serverless-plugin-typescript": "^2.1.4",
+    "serverless-stack-output": "^0.2.3",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  }
+}

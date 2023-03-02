@@ -1,0 +1,59 @@
+# For full config options, check the docs:
+#    docs.serverless.com
+service: ${env:SERVICE_NAME}
+useDotenv: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-stack-output
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    BOT_OWNER: ${env:BOT_OWNER}
+    BOT_CLIENT_ID: ${env:BOT_CLIENT_ID}
+    BOT_TOKEN: ${env:BOT_TOKEN}
+    BOT_PERMISSIONS: ${env:BOT_PERMISSIONS}
+    BOT_PUBLIC_KEY: ${env:BOT_PUBLIC_KEY}
+    GUILD_ID: ${env:GUILD_ID}
+    TYPESENSE_API_KEY: ${env:TYPESENSE_API_KEY}
+    TYPESENSE_HOST: ${env:TYPESENSE_HOST}
+    OPEN_BETA_GRAPHQL_ENDPOINT: ${env:OPEN_BETA_GRAPHQL_ENDPOINT}
+
+custom:
+  stage: ${opt:stage, 'dev'}
+  output:
+    file: .serverless/output.json
+
+resources:
+  Outputs:
+    ApiUrl:
+      Description: 'The API Gateway URL'
+      Value:
+        Fn::Join:
+          - ''
+          - - 'https://'
+            - Ref: ApiGatewayRestApi
+            - '.execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}'
+
+functions:
+  healthcheck:
+    handler: src/functions/healthcheck.handler
+    description: Healthcheck to ensure the service is up
+    events:
+      - http:
+          path: healthcheck
+          method: get
+  interaction:
+    handler: src/functions/interaction.handler
+    description: Handle a discord interaction webhook
+    timeout: 10
+    events:
+      - http:
+          path: interaction
+          method: post
