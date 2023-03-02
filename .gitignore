@@ -1,0 +1,8 @@
+node_modules
+dist
+.serverless
+*.log
+*.code-workspace
+.env
+.build
+testdata
