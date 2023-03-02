@@ -1,0 +1,45 @@
+{
+  "singleQuote": true,
+  "trailingComma": "none",
+  "proseWrap": "always",
+  "arrowParens": "avoid",
+  "endOfLine": "auto",
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": {
+        "parser": "html"
+      }
+    },
+    {
+      "files": "*.css",
+      "options": {
+        "parser": "css"
+      }
+    },
+    {
+      "files": "*.scss",
+      "options": {
+        "parser": "scss"
+      }
+    },
+    {
+      "files": "*.json",
+      "options": {
+        "parser": "json"
+      }
+    },
+    {
+      "files": "*.md",
+      "options": {
+        "parser": "mdx"
+      }
+    },
+    {
+      "files": "*.mdx",
+      "options": {
+        "parser": "mdx"
+      }
+    }
+  ]
+}
