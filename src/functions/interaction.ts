@@ -1,31 +1,21 @@
-import type {
-  Context,
-  APIGatewayProxyResult,
-  APIGatewayEvent,
-  APIGatewayProxyCallback
-} from 'aws-lambda';
+import type { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import {
   type APIApplicationCommandAutocompleteInteraction,
   type APIApplicationCommandAutocompleteResponse,
-  type APIInteractionResponse,
   InteractionResponseType,
-  InteractionType,
-  Routes
+  InteractionType
 } from 'discord.js';
 
 import { interactionHandler } from '../utils/interaction';
 import logger from '../logger';
 import * as ClimbCommand from '../commands/climb';
-import { rest } from '../utils/discord';
 
 export async function handler(
-  event: APIGatewayEvent,
-  context: Context,
-  callback: APIGatewayProxyCallback
+  event: APIGatewayEvent
 ): Promise<APIGatewayProxyResult> {
   return interactionHandler(event)
     .then(async body => {
-      const { token, type } = body;
+      const { type } = body;
 
       switch (type) {
         case InteractionType.ApplicationCommandAutocomplete: {
@@ -45,30 +35,26 @@ export async function handler(
           };
         }
         case InteractionType.ApplicationCommand: {
-          // Defer the response while loading it
-          callback(null, {
-            statusCode: 200,
-            body: JSON.stringify({
-              type: InteractionResponseType.DeferredChannelMessageWithSource
-            } as APIInteractionResponse)
-          });
-
           const responseBody = await ClimbCommand.handler(
             body as APIApplicationCommandAutocompleteInteraction
           );
 
+          logger.debug('Command Response', {
+            statusCode: 200,
+            body: JSON.stringify({
+              type: InteractionResponseType.ChannelMessageWithSource,
+              data: responseBody
+            })
+          });
+
           // Send Response
-          await rest
-            .post(Routes.webhook(process.env.BOT_CLIENT_ID!, token), {
-              body: responseBody
+          return {
+            statusCode: 200,
+            body: JSON.stringify({
+              type: InteractionResponseType.ChannelMessageWithSource,
+              data: responseBody
             })
-            .then(response => {
-              logger.debug('Command Response', response);
-            })
-            .catch(e => {
-              logger.error('Command Error', e);
-              throw e;
-            });
+          };
         }
       }
 
