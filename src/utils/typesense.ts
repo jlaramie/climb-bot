@@ -1,11 +1,14 @@
 import { Client } from 'typesense';
+import type { DisciplineType } from './openbeta/climb-types';
+
+export type DisciplineTypes = keyof DisciplineType | 'boulder';
 
 export interface ClimbSearchResponse {
   areaNames: string[];
   climbName: string;
   climbUUID: string;
   cragLatLng: [number, number];
-  disciplines: string[];
+  disciplines: DisciplineTypes[];
   fa: string;
   grade: string;
   id: string;

@@ -16,13 +16,18 @@ import {
   type ClimbSearchResponse
 } from '../utils/typesense';
 import logger from '../logger';
-import { capitalize } from 'lodash';
+import { uniq } from 'lodash';
 import {
   client as graphqlClient,
   GetClimbQuery,
   type GetClimbQueryResponse,
   type GetClimbQueryVariables
 } from '../utils/openbeta';
+import {
+  getDisciplineIcon,
+  getDisciplines,
+  getFormattedDiscipline
+} from '../utils/climb';
 
 export const command = new SlashCommandBuilder()
   .setName('climb')
@@ -68,10 +73,7 @@ export async function handler(
     },
     {
       name: 'Type',
-      value: Object.keys(climb.type)
-        .map(type => climb.type[type] && capitalize(type))
-        .filter(v => !!v)
-        .join(', '),
+      value: getDisciplines(climb.type).map(getFormattedDiscipline).join(', '),
       inline: true
     },
     climb.content.protection && {
@@ -143,6 +145,11 @@ export async function autocomplete(
         )
         .then(response => response as ClimbsSearchResponse);
 
+      logger.debug(
+        'TypeSense Response for climbs',
+        JSON.stringify(typesenseResponse, null, 2)
+      );
+
       const response: APIApplicationCommandAutocompleteResponse = {
         type: InteractionResponseType.ApplicationCommandAutocompleteResult,
         data: {
@@ -151,9 +158,11 @@ export async function autocomplete(
               result.hits?.map(hit => {
                 const record = hit.document;
                 return {
-                  name: `${record.climbName} (${record.disciplines.join(
-                    ','
-                  )}) (${record.grade})`,
+                  name: `${uniq(
+                    record.disciplines.map(getDisciplineIcon).filter(v => v)
+                  ).join('')} ${record.climbName} (${
+                    record.areaNames[record.areaNames.length - 1]
+                  }) (${record.grade})`,
                   value: record.climbUUID
                 };
               }) || []
