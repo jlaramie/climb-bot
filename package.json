@@ -6,7 +6,7 @@
   "author": "Jordan Laramie <jordanlaramie@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "cross-env NODE_ENV=development serverless offline start --reloadHandler",
+    "start": "cross-env NODE_ENV=development serverless offline start --reloadHandler --stage local",
     "build": "cross-env NODE_ENV=production serverless deploy",
     "watch": "tsc --watch",
     "lint": "run-s lint:*",
