@@ -9,6 +9,7 @@ import {
 import { interactionHandler } from '../utils/interaction';
 import logger from '../logger';
 import * as ClimbCommand from '../commands/climb';
+import * as CragCommand from '../commands/crag';
 
 export async function handler(
   event: APIGatewayEvent
@@ -22,6 +23,9 @@ export async function handler(
       switch (name) {
         case 'climb':
           commandHandler = ClimbCommand;
+          break;
+        case 'crag':
+          commandHandler = CragCommand;
           break;
         default:
           if (name) {
