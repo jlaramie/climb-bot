@@ -59,27 +59,47 @@ export async function handler(
   const { area } = response;
 
   // Create Embed
+  const maxClimbsOrAreas = 50;
+  const maxClimbsOrAreasPerField = 5;
   const image = area.media.find(media => media.mediaType === 0);
-  const areas = chunk(area.children, 5);
-  const climbs = chunk(area.climbs, 5);
+  const areaChunks = chunk(area.children, maxClimbsOrAreasPerField);
+  const climbChunks = chunk(area.climbs, maxClimbsOrAreasPerField);
+  const hasMoreAreas =
+    area.children.length > maxClimbsOrAreas
+      ? `...${area.children.length - maxClimbsOrAreas} more`
+      : undefined;
+  const hasMoreClimbs =
+    area.climbs.length > maxClimbsOrAreas
+      ? `...${area.climbs.length - maxClimbsOrAreas} more`
+      : undefined;
   const fields: APIEmbedField[] = [
-    ...areas.slice(0, 10).map(areas => ({
-      name: 'Areas',
-      value: areas
-        .map(
-          ({ uuid, area_name }) =>
-            `[${area_name}](https://openbeta.io/crag/${uuid})`
-        )
-        .join('\n'),
-      inline: true
-    })),
-    ...climbs.slice(0, 10).map(areas => ({
-      name: 'Climbs',
-      value: areas
-        .map(({ uuid, name }) => `[${name}](https://openbeta.io/climb/${uuid})`)
-        .join('\n'),
-      inline: true
-    }))
+    ...areaChunks
+      .slice(0, maxClimbsOrAreas / maxClimbsOrAreasPerField)
+      .map((areas, i, allItems) => ({
+        name: 'Areas',
+        value: areas
+          .map(
+            ({ uuid, area_name }) =>
+              `[${area_name}](https://openbeta.io/crag/${uuid})`
+          )
+          .concat(hasMoreAreas && i + 1 === allItems.length ? hasMoreAreas : [])
+          .join('\n'),
+        inline: true
+      })),
+    ...climbChunks
+      .slice(0, maxClimbsOrAreas / maxClimbsOrAreasPerField)
+      .map((climbs, i, allItems) => ({
+        name: 'Climbs',
+        value: climbs
+          .map(
+            ({ uuid, name }) => `[${name}](https://openbeta.io/climb/${uuid})`
+          )
+          .concat(
+            hasMoreClimbs && i + 1 === allItems.length ? hasMoreClimbs : []
+          )
+          .join('\n'),
+        inline: true
+      }))
   ].filter(v => !!v) as APIEmbedField[];
   const embed = new EmbedBuilder({
     title: area.area_name,
@@ -150,12 +170,19 @@ export async function autocomplete(
               result.hits?.map(hit => {
                 const record = hit.document;
 
+                const fullName = `${record.name} (${
+                  record.pathTokens.length > 1
+                    ? record.pathTokens[record.pathTokens.length - 2]
+                    : ''
+                }) ${
+                  record.totalClimbs ? `(${record.totalClimbs} climbs)` : ''
+                }`;
+
                 return {
-                  name: `${record.name} (${
-                    record.pathTokens.length > 1
-                      ? record.pathTokens[record.pathTokens.length - 2]
-                      : ''
-                  }) (${record.totalClimbs} climbs)`,
+                  name:
+                    fullName.length > 75
+                      ? `${fullName.substring(0, 75)}...`
+                      : fullName,
                   value: record.areaUUID
                 };
               }) || []
