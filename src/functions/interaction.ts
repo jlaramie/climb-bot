@@ -16,11 +16,27 @@ export async function handler(
   return interactionHandler(event)
     .then(async body => {
       const { type } = body;
+      const { name } =
+        (body as APIApplicationCommandAutocompleteInteraction).data || {};
+      let commandHandler;
+      switch (name) {
+        case 'climb':
+          commandHandler = ClimbCommand;
+          break;
+        default:
+          if (name) {
+            throw new Error(`"${name}" command not found`);
+          }
+          break;
+      }
 
       switch (type) {
         case InteractionType.ApplicationCommandAutocomplete: {
+          if (!commandHandler?.autocomplete) {
+            throw new Error(`"${name}" command autocomplete not found`);
+          }
           const response: APIApplicationCommandAutocompleteResponse =
-            await ClimbCommand.autocomplete(
+            await commandHandler.autocomplete(
               body as APIApplicationCommandAutocompleteInteraction
             );
 
@@ -35,7 +51,10 @@ export async function handler(
           };
         }
         case InteractionType.ApplicationCommand: {
-          const responseBody = await ClimbCommand.handler(
+          if (!commandHandler?.handler) {
+            throw new Error(`"${name}" command handler not found`);
+          }
+          const responseBody = await commandHandler.handler(
             body as APIApplicationCommandAutocompleteInteraction
           );
 
