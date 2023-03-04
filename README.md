@@ -1,6 +1,11 @@
-# ClimbBot
+<p align="center" style="padding-top:1rem">
+  <a href="https://openbeta.io">
+    <img alt="ClimbBot logo" src="assets/images/logo.png" width="150" />
+  </a>
+</p>
+<h1 align="center">ClimbBot</h1>
 
-3rd party discord bot which integrates with OpenBeta.io's dataaset
+3rd party discord bot which integrates with OpenBeta.io's dataset
 
 ## Invite
 
