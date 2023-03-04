@@ -3,6 +3,7 @@ dist
 .serverless
 *.log
 *.code-workspace
-.env
+.env*
+!.env.sample
 .build
 testdata
