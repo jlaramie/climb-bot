@@ -88,7 +88,7 @@ export async function handler(
   const embed = new EmbedBuilder({
     title: climb.name,
     description: climb.content.description,
-    url: `https://openbeta.io/climbs/${climb.id}`,
+    url: `https://openbeta.io/climbs/${climb.uuid}`,
     thumbnail: image && {
       url: `https://openbeta.sirv.com${image.mediaUrl}`
     },

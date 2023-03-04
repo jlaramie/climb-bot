@@ -16,7 +16,7 @@ export type GetClimbQueryVariables = {
 
 export type GetClimbQueryResponse = {
   climb: Pick<IClimbProps, 'grades' | 'fa' | 'name' | 'safety' | 'type'> & {
-    id: string;
+    uuid: string;
     content: IClimbContent;
     media: Array<Pick<MediaType, 'mediaType' | 'mediaUrl'>>;
     metadata: {
@@ -34,7 +34,7 @@ export type GetClimbQueryResponse = {
 export const GetClimbQuery = gql`
   query GetClimb($uuid: ID!) {
     climb(uuid: $uuid) {
-      id
+      uuid
       grades {
         font
         french
