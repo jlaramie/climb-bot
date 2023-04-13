@@ -11,6 +11,15 @@ import logger from '../logger';
 import * as ClimbCommand from '../commands/climb';
 import * as CragCommand from '../commands/crag';
 
+type InteractionTypeKeys = keyof typeof InteractionType;
+type InteractionTypeValues = (typeof InteractionType)[InteractionTypeKeys];
+const interactionTypeNames = Object.entries(InteractionType).reduce<
+  Record<InteractionTypeValues, InteractionTypeKeys>
+>((obj, entry) => {
+  obj[entry[1]] = entry[0];
+  return obj;
+}, {} as Record<InteractionTypeValues, InteractionTypeKeys>);
+
 export async function handler(
   event: APIGatewayEvent
 ): Promise<APIGatewayProxyResult> {
@@ -19,6 +28,12 @@ export async function handler(
       const { type } = body;
       const { name } =
         (body as APIApplicationCommandAutocompleteInteraction).data || {};
+
+      logger.log('Interaction', {
+        typeName: interactionTypeNames[type],
+        data: JSON.stringify(body.data)
+      });
+
       let commandHandler;
       switch (name) {
         case 'climb':
