@@ -8,7 +8,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "suppressImplicitAnyIndexErrors": true,
-    "jsx": "react"
+    "jsx": "react",
+    "ignoreDeprecations": "5.0"
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
