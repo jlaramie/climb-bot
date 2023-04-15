@@ -52,7 +52,7 @@ functions:
   interaction:
     handler: src/functions/interaction.handler
     description: Handle a discord interaction webhook
-    timeout: 15
+    timeout: 30
     events:
       - http:
           path: interaction

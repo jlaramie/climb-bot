@@ -77,3 +77,11 @@ export function verifyKey(
     Buffer.from(clientPublicKey, 'hex')
   );
 }
+
+export function getAPILambdaUrl(event: APIGatewayEvent) {
+  const host = event.headers['host'] || event.headers['Host'];
+  const stage = event.requestContext.stage;
+  const path = event.path;
+
+  return 'https://' + host + '/' + stage + path;
+}

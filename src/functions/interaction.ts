@@ -1,15 +1,24 @@
-import type { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
+import type {
+  Context,
+  APIGatewayProxyResult,
+  APIGatewayEvent,
+  APIGatewayProxyCallback
+} from 'aws-lambda';
 import {
   type APIApplicationCommandAutocompleteInteraction,
   type APIApplicationCommandAutocompleteResponse,
+  type APIInteractionResponse,
   InteractionResponseType,
-  InteractionType
+  InteractionType,
+  Routes
 } from 'discord.js';
+import fetch from 'node-fetch';
 
-import { interactionHandler } from '../utils/interaction';
+import { getAPILambdaUrl, interactionHandler } from '../utils/interaction';
 import logger from '../logger';
 import * as ClimbCommand from '../commands/climb';
 import * as CragCommand from '../commands/crag';
+import { rest } from '../utils/discord';
 
 type InteractionTypeKeys = keyof typeof InteractionType;
 type InteractionTypeValues = (typeof InteractionType)[InteractionTypeKeys];
@@ -21,18 +30,22 @@ const interactionTypeNames = Object.entries(InteractionType).reduce<
 }, {} as Record<InteractionTypeValues, InteractionTypeKeys>);
 
 export async function handler(
-  event: APIGatewayEvent
+  event: APIGatewayEvent,
+  _context: Context,
+  _callback: APIGatewayProxyCallback
 ): Promise<APIGatewayProxyResult> {
   return interactionHandler(event)
     .then(async body => {
-      const { type } = body;
+      const { type, token, id: interactionId } = body;
       const { name } =
         (body as APIApplicationCommandAutocompleteInteraction).data || {};
 
-      logger.log('Interaction', {
-        typeName: interactionTypeNames[type],
-        data: JSON.stringify(body.data)
-      });
+      if (process.env.NODE_ENV === 'production') {
+        logger.log('Interaction', {
+          typeName: interactionTypeNames[type],
+          data: JSON.stringify(body.data)
+        });
+      }
 
       let commandHandler;
       switch (name) {
@@ -73,6 +86,27 @@ export async function handler(
           if (!commandHandler?.handler) {
             throw new Error(`"${name}" command handler not found`);
           }
+
+          if (event.headers['x-deferred'] !== 'true') {
+            logger.log('Call Deferred');
+
+            await fetch(getAPILambdaUrl(event), {
+              method: 'post',
+              headers: { ...event.headers, ['x-deferred']: 'true' },
+              body: JSON.stringify(body)
+            });
+
+            // Defer the response while loading it
+            return {
+              statusCode: 200,
+              body: JSON.stringify({
+                type: InteractionResponseType.DeferredChannelMessageWithSource
+              } as APIInteractionResponse)
+            };
+          }
+
+          logger.log('Call Regular');
+
           const responseBody = await commandHandler.handler(
             body as APIApplicationCommandAutocompleteInteraction
           );
@@ -84,6 +118,21 @@ export async function handler(
               data: responseBody
             })
           });
+
+          // Send Response
+          await rest
+            .post(Routes.interactionCallback(interactionId, token), {
+              body: {
+                type: InteractionResponseType.ChannelMessageWithSource,
+                data: responseBody
+              }
+            })
+            .then(response => {
+              logger.debug('Command Response', response);
+            })
+            .catch(e => {
+              logger.error('Command Error', e);
+            });
 
           // Send Response
           return {
