@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env ts-node
 import commandLineArgs from 'command-line-args';
 import logger from '../logger';
 import { omit } from 'lodash';
