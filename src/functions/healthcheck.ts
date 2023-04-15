@@ -1,6 +1,12 @@
+import { getAllGuilds } from '../utils/discord';
+
 export async function handler() {
+  const guilds = await getAllGuilds();
+
   return {
-    body: 'OK',
+    body: JSON.stringify({
+      numGuilds: guilds.length
+    }),
     statusCode: 200
   };
 }
