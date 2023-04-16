@@ -2,14 +2,19 @@ import type { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import {
   type APIApplicationCommandAutocompleteInteraction,
   type APIApplicationCommandAutocompleteResponse,
+  type APIInteractionResponse,
   InteractionResponseType,
-  InteractionType
+  InteractionType,
+  Routes,
+  RESTPostAPIWebhookWithTokenJSONBody
 } from 'discord.js';
+import fetch from 'node-fetch';
 
-import { interactionHandler } from '../utils/interaction';
+import { getAPILambdaUrl, interactionHandler } from '../utils/interaction';
 import logger from '../logger';
 import * as ClimbCommand from '../commands/climb';
 import * as CragCommand from '../commands/crag';
+import { rest } from '../utils/discord';
 
 type InteractionTypeKeys = keyof typeof InteractionType;
 type InteractionTypeValues = (typeof InteractionType)[InteractionTypeKeys];
@@ -22,17 +27,19 @@ const interactionTypeNames = Object.entries(InteractionType).reduce<
 
 export async function handler(
   event: APIGatewayEvent
-): Promise<APIGatewayProxyResult> {
+): Promise<APIGatewayProxyResult | undefined> {
   return interactionHandler(event)
     .then(async body => {
-      const { type } = body;
+      const { type, token } = body;
       const { name } =
         (body as APIApplicationCommandAutocompleteInteraction).data || {};
 
-      logger.log('Interaction', {
-        typeName: interactionTypeNames[type],
-        data: JSON.stringify(body.data)
-      });
+      if (process.env.NODE_ENV === 'production') {
+        logger.log('Interaction', {
+          typeName: interactionTypeNames[type],
+          data: JSON.stringify(body.data)
+        });
+      }
 
       let commandHandler;
       switch (name) {
@@ -73,25 +80,72 @@ export async function handler(
           if (!commandHandler?.handler) {
             throw new Error(`"${name}" command handler not found`);
           }
-          const responseBody = await commandHandler.handler(
-            body as APIApplicationCommandAutocompleteInteraction
-          );
+
+          if (event.headers['x-deferred'] !== 'true') {
+            logger.log('Call Deferred');
+
+            const fetchPromise = fetch(getAPILambdaUrl(event) + '-deferred', {
+              method: 'post',
+              headers: {
+                ...event.headers,
+                ['x-deferred']: 'true'
+              },
+              body: JSON.stringify(body)
+            }).then(async res =>
+              logger.log(
+                [res.status, res.statusText, await res.text()].join('-')
+              )
+            );
+
+            // Serverless Offline doesn't handle `async` functions correctly so no await
+            if (process.env.IS_OFFLINE !== 'true') {
+              await fetchPromise;
+            }
+
+            // Defer the response while loading it
+            return {
+              statusCode: 200,
+              body: JSON.stringify({
+                type: InteractionResponseType.DeferredChannelMessageWithSource
+              } as APIInteractionResponse)
+            };
+          }
+
+          logger.log('Call Regular');
+
+          const responseBody = await Promise.race([
+            commandHandler.handler(
+              body as APIApplicationCommandAutocompleteInteraction
+            ),
+            new Promise(resolve => setTimeout(() => resolve(false), 29000))
+          ]);
 
           logger.debug('Command Response', {
             statusCode: 200,
-            body: JSON.stringify({
-              type: InteractionResponseType.ChannelMessageWithSource,
-              data: responseBody
-            })
+            body: JSON.stringify(responseBody)
           });
+
+          // I thought this would be `Routes.interactionCallback(interactionId, token)` but it is not
+          await rest
+            .post(Routes.webhook(process.env.BOT_CLIENT_ID!, token), {
+              body:
+                responseBody === false
+                  ? ({
+                      content: 'Response Timeout'
+                    } as RESTPostAPIWebhookWithTokenJSONBody)
+                  : responseBody
+            })
+            .then(response => {
+              logger.debug('Command Response', response);
+            })
+            .catch(e => {
+              logger.error('Command Error', e);
+            });
 
           // Send Response
           return {
             statusCode: 200,
-            body: JSON.stringify({
-              type: InteractionResponseType.ChannelMessageWithSource,
-              data: responseBody
-            })
+            body: 'OK'
           };
         }
       }

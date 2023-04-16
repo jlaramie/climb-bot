@@ -38,7 +38,8 @@ export async function interactionHandler<Type extends InteractionType, Data>(
   }
 
   const isValidRequest = verifyKey(
-    event.body,
+    // Serverless Offline sometimes parses and sometimes doesn't
+    typeof event.body !== 'string' ? JSON.stringify(event.body) : event.body,
     signature,
     timestamp,
     process.env.BOT_PUBLIC_KEY!
@@ -51,7 +52,9 @@ export async function interactionHandler<Type extends InteractionType, Data>(
     });
   }
 
-  const body = JSON.parse(event.body!);
+  // Serverless Offline sometimes parses and sometimes doesn't
+  const body =
+    typeof event.body === 'string' ? JSON.parse(event.body!) : event.body;
 
   logger.debug('Interaction', JSON.stringify(body, null, 2));
 
@@ -76,4 +79,12 @@ export function verifyKey(
     Buffer.from(signature, 'hex'),
     Buffer.from(clientPublicKey, 'hex')
   );
+}
+
+export function getAPILambdaUrl(event: APIGatewayEvent) {
+  const host = event.headers['host'] || event.headers['Host'];
+  const stage = event.requestContext.stage;
+  const path = event.path;
+
+  return 'https://' + host + '/' + stage + path;
 }
