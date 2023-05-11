@@ -20,7 +20,8 @@ import {
   client as graphqlClient,
   GetAreaQuery,
   type GetAreaQueryResponse,
-  type GetAreaQueryVariables
+  type GetAreaQueryVariables,
+  getImageURL
 } from '../utils/openbeta';
 import { chunk } from 'lodash';
 
@@ -61,7 +62,9 @@ export async function handler(
   // Create Embed
   const maxClimbsOrAreas = 50;
   const maxClimbsOrAreasPerField = 5;
-  const image = area.media.find(media => media.mediaType === 0);
+  const image = area.media.find(
+    media => ['jpeg', 'png', 'webp'].indexOf(media.format) !== -1
+  );
   const areaChunks = chunk(area.children, maxClimbsOrAreasPerField);
   const climbChunks = chunk(area.climbs, maxClimbsOrAreasPerField);
   const hasMoreAreas =
@@ -106,7 +109,7 @@ export async function handler(
     description: area.content.description,
     url: `https://openbeta.io/crag/${area.uuid}`,
     thumbnail: image && {
-      url: `https://openbeta.sirv.com${image.mediaUrl}`
+      url: getImageURL(image.mediaUrl)
     },
     footer: {
       text: area.pathTokens.join(' > ')

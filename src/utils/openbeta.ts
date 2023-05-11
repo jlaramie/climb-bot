@@ -5,11 +5,17 @@ import type {
   IClimbContent,
   IClimbProps
 } from './openbeta/climb-types';
-import type { MediaType } from './openbeta/media-types';
+import type { MediaObject } from './openbeta/media-types';
 
 export const client = new GraphQLClient(
   process.env.OPEN_BETA_GRAPHQL_ENDPOINT!
 );
+
+export const BASE_URL_IMAGE = 'https://storage.googleapis.com/openbeta-prod';
+
+export function getImageURL(imagePath: string) {
+  return `${BASE_URL_IMAGE}${imagePath}?format=jpg&w=600&q=90`;
+}
 
 export type GetClimbQueryVariables = {
   uuid: string;
@@ -19,7 +25,7 @@ export type GetClimbQueryResponse = {
   climb: Pick<IClimbProps, 'grades' | 'fa' | 'name' | 'safety' | 'type'> & {
     uuid: string;
     content: IClimbContent;
-    media: Array<Pick<MediaType, 'mediaType' | 'mediaUrl'>>;
+    media: Array<Pick<MediaObject, 'format' | 'mediaUrl'>>;
     metadata: {
       lat: number;
       lng: number;
@@ -49,7 +55,7 @@ export const GetClimbQuery = gql`
         protection
       }
       media {
-        mediaType
+        format
         mediaUrl
       }
       metadata {
@@ -89,7 +95,7 @@ export type GetAreaQueryResponse = {
   area: Pick<IAreaProps, 'area_name' | 'totalClimbs' | 'pathTokens'> & {
     uuid: string;
     content: IAreaContent;
-    media: Array<Pick<MediaType, 'mediaType' | 'mediaUrl'>>;
+    media: Array<Pick<MediaObject, 'format' | 'mediaUrl'>>;
     metadata: {
       lat: number;
       lng: number;
@@ -120,7 +126,7 @@ export const GetAreaQuery = gql`
         description
       }
       media {
-        mediaType
+        format
         mediaUrl
       }
       totalClimbs

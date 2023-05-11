@@ -21,7 +21,8 @@ import {
   client as graphqlClient,
   GetClimbQuery,
   type GetClimbQueryResponse,
-  type GetClimbQueryVariables
+  type GetClimbQueryVariables,
+  getImageURL
 } from '../utils/openbeta';
 import {
   getDisciplineIcon,
@@ -64,7 +65,9 @@ export async function handler(
   const { climb } = response;
 
   // Create Embed
-  const image = climb.media.find(media => media.mediaType === 0);
+  const image = climb.media.find(
+    media => ['jpeg', 'png', 'webp'].indexOf(media.format) !== -1
+  );
   const fields: APIEmbedField[] = [
     (climb.grades?.yds || climb.grades?.vscale) && {
       name: 'Grade',
@@ -92,7 +95,7 @@ export async function handler(
     description: climb.content.description,
     url: `https://openbeta.io/climbs/${climb.uuid}`,
     thumbnail: image && {
-      url: `https://openbeta.sirv.com${image.mediaUrl}`
+      url: getImageURL(image.mediaUrl)
     },
     footer: {
       text: climb.pathTokens.join(' > ')
