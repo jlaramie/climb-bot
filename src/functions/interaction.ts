@@ -25,6 +25,7 @@ type InteractionTypeValues = (typeof InteractionType)[InteractionTypeKeys];
 const interactionTypeNames = Object.entries(InteractionType).reduce<
   Record<InteractionTypeValues, InteractionTypeKeys>
 >((obj, entry) => {
+  // @ts-expect-error - Typescript doesn't like this
   obj[entry[1]] = entry[0];
   return obj;
 }, {} as Record<InteractionTypeValues, InteractionTypeKeys>);

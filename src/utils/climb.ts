@@ -4,7 +4,7 @@ import type { DisciplineTypes } from './typesense';
 
 export function getDisciplines(disciplines: DisciplineType): DisciplineTypes[] {
   return Object.keys(disciplines).filter(
-    discipline => disciplines[discipline]
+    discipline => disciplines[discipline as keyof DisciplineType]
   ) as DisciplineTypes[];
 }
 

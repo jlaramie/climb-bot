@@ -27,9 +27,6 @@
   },
   "devDependencies": {
     "@openbeta/sandbag": "^0.0.33",
-    "@sapphire/eslint-config": "^4.3.8",
-    "@sapphire/prettier-config": "^1.4.5",
-    "@sapphire/ts-config": "^3.3.4",
     "@turf/helpers": "^6.5.0",
     "@types/aws-lambda": "^8.10.111",
     "@types/command-line-args": "^5.2.0",
