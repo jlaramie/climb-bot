@@ -1,10 +1,12 @@
 # For full config options, check the docs:
 #    docs.serverless.com
-service: ${env:SERVICE_NAME}
+org: YOUR_ORG_NAME
+app: YOUR_APP_NAME
+service: YOUR_SERVICE_NAME
 useDotenv: true
 
 plugins:
-  - serverless-plugin-typescript
+  # - serverless-plugin-typescript
   - serverless-stack-output
   - serverless-offline
 
@@ -25,6 +27,15 @@ provider:
     TYPESENSE_HOST: ${env:TYPESENSE_HOST}
     OPEN_BETA_GRAPHQL_ENDPOINT: ${env:OPEN_BETA_GRAPHQL_ENDPOINT}
 
+package:
+  patterns:
+    - '!**'
+    - 'dist/**'
+    - 'package.json'
+
+build:
+  esbuild: false
+
 custom:
   stage: ${opt:stage, 'dev'}
   output:
@@ -43,14 +54,14 @@ resources:
 
 functions:
   healthcheck:
-    handler: src/functions/healthcheck.handler
+    handler: src/healthcheck.handler
     description: Healthcheck to ensure the service is up
     events:
       - http:
           path: healthcheck
           method: get
   interaction:
-    handler: src/functions/interaction.handler
+    handler: src/interaction.handler
     description: Handle a discord interaction webhook
     timeout: 30
     events:

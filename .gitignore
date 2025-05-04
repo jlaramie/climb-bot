@@ -7,3 +7,4 @@ dist
 !.env.sample
 .build
 testdata
+serverless.yml

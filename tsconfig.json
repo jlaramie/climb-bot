@@ -29,7 +29,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/.tsbuildinfo",
     "jsx": "react",
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "5.0",
+    "noEmit": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
